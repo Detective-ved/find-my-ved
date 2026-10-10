@@ -853,8 +853,12 @@
       // Contact Form
       const [applicantName, setApplicantName] = useState("");
       const [instagramHandle, setInstagramHandle] = useState("");
+      const [applicantContact, setApplicantContact] = useState("");
+      const [applicantMessage, setApplicantMessage] = useState("");
       const [consentGiven, setConsentGiven] = useState(false);
       const [copiedToast, setCopiedToast] = useState(false);
+      const [transmissionStatus, setTransmissionStatus] = useState("");
+      const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
 
       const handleSelectOption = (questionList, option) => {
         if (selectedOption) return;
@@ -1332,6 +1336,49 @@
           setTimeout(() => setCopiedToast(false), 2500);
         };
 
+        const handleContactVed = () => {
+          window.open("https://www.instagram.com/ulkapind_unpinned/", "_blank", "noopener,noreferrer");
+        };
+
+        const handleWhatsAppVed = () => {
+          // The number is not printed on the page, but a wa.me link is discoverable in page source.
+          window.open("https://wa.me/917906771654?text=" + encodeURIComponent("Hi Ved! I found your Find My Ved Dandiya Recruitment Trials website 🪩"), "_blank", "noopener,noreferrer");
+        };
+
+        const handleTransmitDossier = async () => {
+          if (isSubmittingApplication) return;
+          setIsSubmittingApplication(true);
+          setTransmissionStatus("Transmitting your application… 💌");
+          const formPayload = {
+            name: applicantName.trim(),
+            instagram: instagramHandle.trim() || "Not provided",
+            contact: applicantContact.trim() || "Not provided",
+            message: applicantMessage.trim() || "No additional message",
+            quiz_score: `${xp} XP`,
+            badge: personalityBadge,
+            verdict: verdict.title,
+            _subject: `Find My Ved application — ${applicantName.trim() || "New applicant"}`,
+            _template: "table"
+          };
+
+          try {
+            const response = await fetch("https://formsubmit.co/ajax/vednat2024@gmail.com", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Accept": "application/json" },
+              body: JSON.stringify(formPayload)
+            });
+            const result = await response.json();
+            if (!response.ok || result.success !== "true") {
+              throw new Error(result.message || "Submission was not accepted");
+            }
+            setTransmissionStatus("Application sent successfully! Ved will receive your details by email. You can also DM him on Instagram 💖");
+          } catch (error) {
+            setTransmissionStatus("Couldn't send automatically. The email form may still need activation, or the connection failed. Please DM Ved on Instagram instead.");
+          } finally {
+            setIsSubmittingApplication(false);
+          }
+        };
+
         return (
           <main className="min-h-screen flex flex-col items-center justify-start p-4 md:p-6 bg-cyberBlack relative overflow-y-auto" aria-label="Final Dossier and Share Screen">
             <div className="w-full max-w-lg space-y-6 my-4">
@@ -1391,6 +1438,19 @@
                 </button>
               </div>
 
+              <button
+                onClick={handleContactVed}
+                className="w-full py-3 px-4 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all text-sm uppercase tracking-wider"
+              >
+                DM VED ON INSTAGRAM ↗ @ULKAPIND_UNPINNED
+              </button>
+              <button
+                onClick={handleWhatsAppVed}
+                className="w-full py-3 px-4 bg-[#128C7E] text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all text-sm uppercase tracking-wider"
+              >
+                OPTIONAL: MESSAGE VED ON WHATSAPP ↗
+              </button>
+
               {/* Voluntary Connection Form (Only if interested) */}
               {(finalChoice === "YES" || finalChoice === "INTERESTED") && (
                 <div className="cyber-card p-6 rounded-3xl border border-electricViolet/50 space-y-4">
@@ -1419,13 +1479,35 @@
                     </div>
 
                     <div>
-                      <label className="block text-gray-300 mb-1">INSTAGRAM @HANDLE OR CONTACT</label>
+                      <label className="block text-gray-300 mb-1">INSTAGRAM @HANDLE (OPTIONAL)</label>
                       <input
                         type="text"
                         value={instagramHandle}
                         onChange={(e) => setInstagramHandle(e.target.value)}
                         placeholder="@username"
+                        className="w-full p-3 bg-cyberBlack border border-cyberBorder rounded-xl text-white focus:border-neonPink outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-300 mb-1">YOUR EMAIL OR WHATSAPP (OPTIONAL)</label>
+                      <input
+                        type="text"
+                        value={applicantContact}
+                        onChange={(e) => setApplicantContact(e.target.value)}
+                        placeholder="How should Ved reach you?"
                         className="w-full p-3 bg-cyberBlack border border-cyberBorder rounded-xl text-white focus:border-cyberCyan outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-300 mb-1">MESSAGE (OPTIONAL)</label>
+                      <textarea
+                        value={applicantMessage}
+                        onChange={(e) => setApplicantMessage(e.target.value)}
+                        placeholder="Anything Ved should know?"
+                        rows="3"
+                        className="w-full p-3 bg-cyberBlack border border-cyberBorder rounded-xl text-white focus:border-cyberCyan outline-none resize-y"
                       />
                     </div>
 
@@ -1442,15 +1524,18 @@
                     </label>
 
                     <button
-                      disabled={!consentGiven || (!applicantName && !instagramHandle)}
-                      onClick={() => {
-                        audio.playFanfare();
-                        alert(`Dossier logged locally for ${applicantName || 'Applicant'} (${instagramHandle})! Take a screenshot and send it to Ved to seal the deal 🪩`);
-                      }}
+                      disabled={!consentGiven || (!applicantName.trim() && !instagramHandle.trim() && !applicantContact.trim()) || isSubmittingApplication}
+                      onClick={handleTransmitDossier}
                       className="w-full py-3 bg-gradient-to-r from-neonPink to-electricViolet text-white font-bold rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition-all uppercase tracking-wider"
                     >
-                      TRANSMIT DOSSIER TO VED 💌
+                      {isSubmittingApplication ? "SENDING APPLICATION…" : "SEND APPLICATION TO VED 💌"}
                     </button>
+                    {transmissionStatus && (
+                      <p role="status" className="text-xs text-cyberCyan leading-relaxed">{transmissionStatus}</p>
+                    )}
+                    <p className="text-[10px] text-gray-500 leading-relaxed">
+Your application is sent to Ved by email through FormSubmit. Your details are shared only if you choose to submit and agree above. Instagram DM is also available as a direct contact option.
+                    </p>
                   </div>
                 </div>
               )}
