@@ -856,20 +856,6 @@
       const [consentGiven, setConsentGiven] = useState(false);
       const [copiedToast, setCopiedToast] = useState(false);
 
-      // One-Click Download Feature
-      const downloadProjectFile = () => {
-        const htmlContent = document.documentElement.outerHTML;
-        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'find-my-ved-dandiya-trials.html';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      };
-
       const handleSelectOption = (questionList, option) => {
         if (selectedOption) return;
         setSelectedOption(option);
@@ -939,14 +925,6 @@
                 </button>
               </div>
 
-              <div className="pt-2 flex justify-center">
-                <button
-                  onClick={downloadProjectFile}
-                  className="text-[10px] text-cyberCyan hover:underline font-mono flex items-center gap-1 opacity-70 hover:opacity-100"
-                >
-                  ⬇️ Download Standalone App HTML
-                </button>
-              </div>
             </div>
           </main>
         );
@@ -964,13 +942,6 @@
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono text-festiveGold font-bold">XP: {xp}</span>
-                <button
-                  onClick={downloadProjectFile}
-                  title="Download HTML File"
-                  className="px-2 py-1 text-[10px] font-mono bg-cyberBorder text-cyberCyan rounded hover:bg-cyberCyan hover:text-black transition-colors"
-                >
-                  SAVE HTML 💾
-                </button>
               </div>
             </header>
 
@@ -1417,16 +1388,6 @@
                   className="py-3 px-3 bg-cyberSurface border border-cyberBorder text-gray-300 font-mono text-xs font-bold rounded-xl hover:text-white active:scale-95 transition-all"
                 >
                   REPLAY SIMULATION ↺
-                </button>
-              </div>
-
-              {/* Direct Standalone HTML Export */}
-              <div className="w-full text-center">
-                <button
-                  onClick={downloadProjectFile}
-                  className="w-full py-3 bg-cyberBorder/80 hover:bg-cyberCyan hover:text-black text-cyberCyan font-mono text-xs font-bold rounded-xl border border-cyberCyan/40 transition-all flex items-center justify-center gap-2"
-                >
-                  <span>💾 DOWNLOAD COMPLETE OFFLINE HTML FILE</span>
                 </button>
               </div>
 
