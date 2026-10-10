@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FIND MY VED: The Dandiya Recruitment Trials 🪩💀</title>
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Outfit:wght@400;600;800;900&family=Rozha+One&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React 18, ReactDOM, Canvas-Confetti, Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cyberBlack: '#06030c',
+            cyberSurface: '#120b22',
+            cyberBorder: '#2b1b4a',
+            neonPink: '#ff1493',
+            electricViolet: '#8a2be2',
+            cyberCyan: '#00ffff',
+            festiveGold: '#ffd700',
+            matrixGreen: '#00ff66'
+          },
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+            festive: ['Rozha One', 'serif']
+          },
+          animation: {
+            'glow-pulse': 'glowPulse 2s infinite ease-in-out',
+            'float': 'float 4s infinite ease-in-out',
+            'slideDown': 'slideDown 0.3s ease-out'
+          },
+          keyframes: {
+            glowPulse: {
+              '0%, 100%': { filter: 'drop-shadow(0 0 12px rgba(255, 20, 147, 0.7))' },
+              '50%': { filter: 'drop-shadow(0 0 24px rgba(0, 255, 255, 0.9))' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' }
+            },
+            slideDown: {
+              '0%': { opacity: '0', transform: 'translateY(-10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #06030c;
+      color: #f1f1f5;
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #06030c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2b1b4a;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff1493;
+    }
+    .cyber-card {
+      background: rgba(18, 11, 34, 0.88);
+      border: 1px solid rgba(138, 43, 226, 0.4);
+      backdrop-filter: blur(14px);
+    }
+    .cyber-btn {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .cyber-btn:active {
+      transform: scale(0.97);
+    }
+    .scanline {
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 0, 0, 0.35) 50%,
+        rgba(0, 0, 0, 0.35)
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="relative min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    // Web Audio Synthesizer: 100% Procedural Audio Engine
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx && typeof window !== 'undefined') {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playClack(freq = 980, duration = 0.08) {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + duration);
+
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(freq * 1.2, this.ctx.currentTime);
+          filter.Q.setValueAtTime(3.5, this.ctx.currentTime);
+
+          gain.gain.setValueAtTime(0.45, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      }
+      playBlip(freq = 440) {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.12);
+        } catch(e) {}
+      }
+      playFanfare() {
+        if (this.muted) return;
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+          setTimeout(() => this.playBlip(f), i * 90);
+        });
+      }
+      playBuzz() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.22);
+        } catch(e) {}
+      }
+    }
+    const audio = new AudioEngine();
+
+    const BOSS_QUESTIONS = [
+      {
+        id: "boss_1",
+        category: "SAREE ENGINE & GPU THERMALS",
+        scenario: "Ved is standing at the Garba perimeter. Suddenly, a girl wearing a traditional royal saree enters in cinematic slow motion. What happens to Ved's central nervous system?",
+        options: [
+          {
+            label: "A",
+            text: "His internal GPU begins rendering her pallu in 8K HDR and immediately catches physical fire.",
+            feedback: "CORRECT. The saree rendering engine is a core hardware dependency. Thermals: 106°C. The internal fans have filed for voluntary retirement.",
+            isCorrect: true
+          },
+          {
+            label: "B",
+            text: "He executes a smooth Bollywood spin, taps her shoulder, and recites an Urdu couplet.",
+            feedback: "DELUSIONAL FANFICTION. Bro would trip on his own mojari and legally dissolve his personality.",
+            isCorrect: false
+          },
+          {
+            label: "C",
+            text: "Three generations of his ancestors simultaneously open an urgent matrimonial probe.",
+            feedback: "PLAUSIBLE BUT WRONG. Ancestors are fast asleep in Haridwar, bro.",
+            isCorrect: false
+          },
+          {
+            label: "D",
+            text: "He opens LinkedIn to see if eye contact qualifies as an 'Endorsed Core Competency'.",
+            feedback: "FAIR GUESS, but his phone battery is already at 2% from downloading Garba remix flacs.",
+            isCorrect: false
+          }
+        ],
+        xp: 150
+      },
+      {
+        id: "boss_2",
+        category: "ROMANTIC DEPLOYMENT PIPELINE",
+        scenario: "Instead of simply posting an Instagram story or sliding into DMs like an ordinary human, Ved chose to:",
+        options: [
+          {
+            label: "A",
+            text: "Politely ask his college friends to introduce him to someone friendly.",
+            feedback: "HA! As if his peer group possesses higher collective social bandwidth than a potato clock.",
+            isCorrect: false
+          },
+          {
+            label: "B",
+            text: "Engineer a high-concurrency cyberpunk gamified recruitment trial at 3:15 AM.",
+            feedback: "BULLSEYE. The man automated his entire romantic life. Deployment status: emotionally unstable, zero rizz guarantees, high uptime.",
+            isCorrect: true
+          },
+          {
+            label: "C",
+            text: "Rent a VIP Garba skybox and project his resume onto a stadium blimp.",
+            feedback: "INCORRECT. You think engineering students have venture capital? Bro survives on ₹20 cutting chai.",
+            isCorrect: false
+          },
+          {
+            label: "D",
+            text: "Draft a 42-page GitHub markdown spec detailing his dodhiya velocity requirements.",
+            feedback: "CLOSE. He considered drafting it, but decided React canvas had superior aesthetic conversion.",
+            isCorrect: false
+          }
+        ],
+        xp: 150
+      },
+      {
+        id: "boss_3",
+        category: "GARBA AUDIO CONFLICT",
+        scenario: "The Garba DJ abruptly transitions from classic Falguni Pathak into a 175 BPM EDM trap remix. What is Ved's reflex?",
+        options: [
+          {
+            label: "A",
+            text: "Initiate competitive breakdancing to assert alpha dominance over middle-aged uncles.",
+            feedback: "FALSE. Knee cartilage would instantly file an unhandled runtime exception.",
+            isCorrect: false
+          },
+          {
+            label: "B",
+            text: "Hold his dandiya sticks like weapons of mass awkwardness and lose all motor coordination.",
+            feedback: "CANON FACTS. He is holding ₹60 painted sticks like they require sudo root access to swing.",
+            isCorrect: true
+          },
+          {
+            label: "C",
+            text: "File an FIR with the Cyber Crime Cell citing acoustic terrorism against Gujarati culture.",
+            feedback: "NOPE. Police station is crowded. He avoids crowded physical buildings by default.",
+            isCorrect: false
+          },
+          {
+            label: "D",
+            text: "Unplug the DJ console while screaming 'VIBE PRESERVATION ACT OF 1998'.",
+            feedback: "TEMPTING, but venue security guards look like they bench-press commercial auto-rickshaws.",
+            isCorrect: false
+          }
+        ],
+        xp: 150
+      },
+      {
+        id: "boss_4",
+        category: "INTROVERT BUFFERING LATENCY",
+        scenario: "You make unexpected, direct eye contact with Ved during a 2-step dandiya spin. What occurs in his brain?",
+        options: [
+          {
+            label: "A",
+            text: "He maintains eye contact for 0.7s before his soul forcefully Alt-Tabs to another window.",
+            feedback: "ACCURATE. Memory buffer overflow: gaze duration exceeded safe threshold (400ms). Soul currently hibernating in background task tray.",
+            isCorrect: true
+          },
+          {
+            label: "B",
+            text: "He winks playfully and pulls off an Olympic gymnast triple spin.",
+            feedback: "INCORRECT. If bro winks, it is 100% because dust entered his contact lens.",
+            isCorrect: false
+          },
+          {
+            label: "C",
+            text: "He begins explaining the plot holes in Christopher Nolan's Oppenheimer to relieve tension.",
+            feedback: "CLOSE! Very tempting backup defense mechanism, but Alt-Tab happened first.",
+            isCorrect: false
+          },
+          {
+            label: "D",
+            text: "He hands you a formal printed invoice for psychological distress.",
+            feedback: "INCORRECT. The accounting department is on festive leave.",
+            isCorrect: false
+          }
+        ],
+        xp: 150
+      }
+    ];
+
+    const PREFERENCE_QUESTIONS = [
+      {
+        id: "pref_1",
+        category: "POST-GARBA CUISINE PROTOCOL",
+        scenario: "It is 12:45 AM. Both of you are dehydrated, feet aching, and the venue is packing up. What is Ved's definition of an elite romantic date?",
+        options: [
+          {
+            label: "A",
+            text: "A 5-star rooftop lounge with curated elderflower mocktails and jazz.",
+            feedback: "WRONG. Ved would sit there calculating how many cloud GPUs he could rent for that exact bill.",
+            isCorrect: false
+          },
+          {
+            label: "B",
+            text: "Standing near a roadside tapri drinking hot chai and sharing unhinged lore till 2 AM.",
+            feedback: "SUPREME VERDICT. Low budget, infinite lore, 0 pretentiousness. Street-side cutting chai is the ultimate love language.",
+            isCorrect: true
+          },
+          {
+            label: "C",
+            text: "Ordering artisanal gelato on an express delivery app in dead silence.",
+            feedback: "TOO MELODRAMATIC. We want chaotic festive memories, not an indie art film about sorrow.",
+            isCorrect: false
+          },
+          {
+            label: "D",
+            text: "Going straight home to push code to GitHub before the 365-day streak breaks.",
+            feedback: "HE CONTEMPLATED IT NGL, but midnight tapri chai defeats Git every single time.",
+            isCorrect: false
+          }
+        ],
+        xp: 200
+      },
+      {
+        id: "pref_2",
+        category: "CLASH PROTOCOL & GREEN FLAGS",
+        scenario: "During a chaotic circle dance, you accidentally strike Ved's knuckles instead of his dandiya stick. What reaction proves you are a certified soulmate?",
+        options: [
+          {
+            label: "A",
+            text: "Presenting a notarized indemnity waiver and calling an ambulance.",
+            feedback: "TOO BUREAUCRATIC. His knuckles are bruised, not amputated.",
+            isCorrect: false
+          },
+          {
+            label: "B",
+            text: "Bursting out laughing together and blaming the DJ's illegal BPM.",
+            feedback: "CERTIFIED GREEN FLAG. Navratri is about festive joy, not the Olympics. Laughing at mutual mistakes is 100/100 aura.",
+            isCorrect: true
+          },
+          {
+            label: "C",
+            text: "Pretending it was an intentional Shaolin kung-fu block to teach him humility.",
+            feedback: "SCARY. He came for Garba, not martial arts disciplinary boot camp.",
+            isCorrect: false
+          },
+          {
+            label: "D",
+            text: "Demanding a VAR replay using spectator Instagram reels.",
+            feedback: "FUNNY, but VAR footage would confirm Ved lacked spatial awareness anyway.",
+            isCorrect: false
+          }
+        ],
+        xp: 200
+      },
+      {
+        id: "pref_3",
+        category: "ROMANTIC DIPLOMACY",
+        scenario: "Ved accidentally blurts out 'sunn na bhai' to you in the middle of a delicate romantic conversation. How is the crisis resolved?",
+        options: [
+          {
+            label: "A",
+            text: "Immediate friendship treaty signed. Romantic visa permanently revoked.",
+            feedback: "TRAGIC. An Indian engineering student's vocal cords emit 'bhai' involuntarily, have mercy.",
+            isCorrect: false
+          },
+          {
+            label: "B",
+            text: "Both of you pause, acknowledge the catastrophic slip, roast him mercilessly, and continue.",
+            feedback: "PEAK HARMONY. Surviving the accidental 'bhai' through mutual roasting is true intimacy.",
+            isCorrect: true
+          },
+          {
+            label: "C",
+            text: "File an affidavit with the Ministry of Love to expunge the audio recording.",
+            feedback: "LEGAL TRIBUNAL FEES ARE PROHIBITIVE. Case dismissed.",
+            isCorrect: false
+          },
+          {
+            label: "D",
+            text: "Start addressing him exclusively as 'Chacha Ji' for the rest of Navratri.",
+            feedback: "RUTHLESS. He would never psychologically recover from this emotional damage.",
+            isCorrect: false
+          }
+        ],
+        xp: 200
+      }
+    ];
+
+    const CHAOS_SCENARIOS = [
+      {
+        id: "sim_1",
+        title: "SCENARIO 01: THE PRE-MATCH PANIC",
+        text: "You are outside the Garba ground. It starts drizzling. Ved has one umbrella and has somehow dropped his gate QR pass into a puddle. What is the move?",
+        choices: [
+          {
+            text: "Share the umbrella, laugh at his tech failure, and charm the guard with pure festive smile rizz.",
+            outcome: "SECURITY GUARDS MELTED. Entry unlocked. Ved's romantic subsystem is at 94% efficiency.",
+            trait: "CHAOS COMMANDER",
+            scoreBonus: 120
+          },
+          {
+            text: "Inspect the wet QR pass with phone torch and try to reconstruct the pixel parity bit.",
+            outcome: "NERD BONDING ESTABLISHED. You both got wet, but the algorithm was thoroughly respected.",
+            trait: "SYNTAX LOVER",
+            scoreBonus: 90
+          },
+          {
+            text: "Leave him in the rain and go dance with the nearest Gujarati aunty.",
+            outcome: "COLD-BLOODED. Aunty shared hot fafda-jalebi with you though. Respect.",
+            trait: "SOLO PREDATOR",
+            scoreBonus: 50
+          }
+        ]
+      },
+      {
+        id: "sim_2",
+        title: "SCENARIO 02: THE 3:00 AM LORE DUMP",
+        text: "Post-event notification arrives: 'sunn na 💀...'. What do you anticipate?",
+        choices: [
+          {
+            text: "A 4-minute unhinged voice note explaining why crows have better social hierarchies than colleges.",
+            outcome: "LORE SUBSCRIPTION CONFIRMED. You are now the designated keeper of nocturnal thoughts.",
+            trait: "CHRONICALLY ONLINE TWIN",
+            scoreBonus: 120
+          },
+          {
+            text: "A sensible, normal message saying 'Good night, had fun today!'.",
+            outcome: "ERROR 404: Normalcy not found in Ved's repository. Try again.",
+            trait: "REALITY CHECKER",
+            scoreBonus: 40
+          },
+          {
+            text: "A meme with 0 context that makes zero sense until you stare at it for 25 seconds.",
+            outcome: "CRYPTIC HUMOUR ACHIEVED. Your mutual brainrot level increased by +50.",
+            trait: "MEME SCHOLAR",
+            scoreBonus: 100
+          }
+        ]
+      }
+    ];
+
+    function DandiyaArcadeCanvas({ onClash }) {
+      const canvasRef = useRef(null);
+      const stateRef = useRef({
+        rot: 0,
+        clashAnim: 0,
+        particles: [],
+        mouse: { x: 0, y: 0, active: false }
+      });
+
+      const triggerClashEffect = useCallback((x, y) => {
+        audio.playClack(850 + Math.random() * 350);
+        stateRef.current.clashAnim = 1.0;
+        // spawn festive sparks
+        for (let i = 0; i < 22; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const spd = 2 + Math.random() * 5.5;
+          stateRef.current.particles.push({
+            x: x || 0,
+            y: y || 0,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd,
+            life: 1.0,
+            color: Math.random() > 0.5 ? '#ff1493' : '#ffd700',
+            size: 3 + Math.random() * 3
+          });
+        }
+        if (onClash) onClash();
+      }, [onClash]);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animId;
+
+        const resize = () => {
+          const rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width * (window.devicePixelRatio || 1);
+          canvas.height = rect.height * (window.devicePixelRatio || 1);
+          ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const render = () => {
+          const dpr = window.devicePixelRatio || 1;
+          const width = canvas.width / dpr;
+          const height = canvas.height / dpr;
+          const cx = width / 2;
+          const cy = height / 2;
+          const s = stateRef.current;
+
+          ctx.clearRect(0, 0, width, height);
+
+          // 1. Draw glowing cyberpunk floor mandala
+          ctx.save();
+          ctx.translate(cx, cy);
+          s.rot += 0.007;
+          ctx.rotate(s.rot);
+
+          ctx.strokeStyle = 'rgba(138, 43, 226, 0.28)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, 105, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.strokeStyle = 'rgba(0, 255, 255, 0.35)';
+          ctx.setLineDash([8, 6]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 80, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          for (let i = 0; i < 8; i++) {
+            ctx.rotate(Math.PI / 4);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -85);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(0, -85, 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffd700';
+            ctx.fill();
+          }
+          ctx.restore();
+
+          // 2. Interactive Dandiya Sticks with Clash Physics
+          if (s.clashAnim > 0) {
+            s.clashAnim -= 0.06;
+          }
+          const clashOffset = Math.sin(s.clashAnim * Math.PI) * 45;
+
+          const drawStick = (x, y, angle, baseColor, glowColor) => {
+            ctx.save();
+            ctx.translate(cx + x, cy + y);
+            ctx.rotate(angle);
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = 18;
+
+            const grad = ctx.createLinearGradient(-6, -65, 6, 65);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.3, baseColor);
+            grad.addColorStop(0.8, '#4a0e4e');
+            grad.addColorStop(1, '#ffd700');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.roundRect(-6, -65, 12, 130, 6);
+            ctx.fill();
+
+            // Festive golden rings
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(-6, -38, 12, 3.5);
+            ctx.fillRect(-6, -18, 12, 3.5);
+            ctx.fillRect(-6, 28, 12, 7);
+
+            // Tip jewel
+            ctx.beginPath();
+            ctx.arc(0, -65, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#00ffff';
+            ctx.fill();
+
+            ctx.restore();
+          };
+
+          const mx = s.mouse.active ? (s.mouse.x - cx) * 0.08 : 0;
+          const my = s.mouse.active ? (s.mouse.y - cy) * 0.08 : 0;
+
+          // Stick 1 (Left - Pink)
+          const s1X = -48 + clashOffset + mx;
+          const s1Ang = -0.35 + (s.clashAnim * 0.48);
+          drawStick(s1X, my, s1Ang, '#ff1493', 'rgba(255, 20, 147, 0.8)');
+
+          // Stick 2 (Right - Cyan)
+          const s2X = 48 - clashOffset + mx;
+          const s2Ang = 0.35 - (s.clashAnim * 0.48);
+          drawStick(s2X, my, s2Ang, '#00ffff', 'rgba(0, 255, 255, 0.8)');
+
+          // 3. Sparks & Particles
+          for (let i = s.particles.length - 1; i >= 0; i--) {
+            const p = s.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.035;
+            if (p.life <= 0) {
+              s.particles.splice(i, 1);
+              continue;
+            }
+            ctx.save();
+            ctx.translate(cx + p.x, cy + p.y);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(0, 0, p.size * p.life, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          animId = requestAnimationFrame(render);
+        };
+
+        render();
+
+        const handlePointerDown = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left - rect.width / 2;
+          const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top - rect.height / 2;
+          triggerClashEffect(x, y);
+        };
+
+        const handlePointerMove = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+          const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+          if (clientX && clientY) {
+            stateRef.current.mouse = {
+              x: clientX - rect.left,
+              y: clientY - rect.top,
+              active: true
+            };
+          }
+        };
+
+        canvas.addEventListener('mousedown', handlePointerDown);
+        canvas.addEventListener('touchstart', handlePointerDown, { passive: true });
+        canvas.addEventListener('mousemove', handlePointerMove);
+        canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
+
+        return () => {
+          window.removeEventListener('resize', resize);
+          cancelAnimationFrame(animId);
+          canvas.removeEventListener('mousedown', handlePointerDown);
+          canvas.removeEventListener('touchstart', handlePointerDown);
+          canvas.removeEventListener('mousemove', handlePointerMove);
+          canvas.removeEventListener('touchmove', handlePointerMove);
+        };
+      }, [triggerClashEffect]);
+
+      return (
+        <div className="relative w-full h-64 md:h-72 flex items-center justify-center cursor-pointer select-none">
+          <canvas ref={canvasRef} className="w-full h-full block" />
+          <div className="absolute bottom-2 inset-x-0 text-center pointer-events-none">
+            <span className="inline-block px-3 py-1 text-xs font-mono tracking-wider bg-cyberBlack/80 border border-cyberBorder text-cyberCyan rounded-full backdrop-blur-sm animate-pulse">
+              ⚡ TAP ANYWHERE TO CLASH STICKS ⚡
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    function GarbaverseRhythmArcade({ onComplete }) {
+      const [score, setScore] = useState(0);
+      const [combo, setCombo] = useState(0);
+      const [timeLeft, setTimeLeft] = useState(20);
+      const [lanes, setLanes] = useState([
+        { id: 1, name: 'LEFT', key: 'A', hitText: '' },
+        { id: 2, name: 'CLASH', key: 'S', hitText: '' },
+        { id: 3, name: 'RIGHT', key: 'D', hitText: '' }
+      ]);
+      const [targetLane, setTargetLane] = useState(2);
+      const [isGameOver, setIsGameOver] = useState(false);
+
+      useEffect(() => {
+        if (timeLeft <= 0) {
+          setIsGameOver(true);
+          audio.playFanfare();
+          return;
+        }
+        const timer = setInterval(() => {
+          setTimeLeft(t => t - 1);
+        }, 1000);
+        return () => clearInterval(timer);
+      }, [timeLeft]);
+
+      useEffect(() => {
+        if (isGameOver) return;
+        const beatInterval = setInterval(() => {
+          const next = Math.floor(Math.random() * 3) + 1;
+          setTargetLane(next);
+        }, 800);
+        return () => clearInterval(beatInterval);
+      }, [isGameOver]);
+
+      const triggerHit = (laneId) => {
+        if (isGameOver) return;
+        if (laneId === targetLane) {
+          audio.playClack(1050);
+          setScore(s => s + 100 * (combo + 1));
+          setCombo(c => c + 1);
+          setLanes(prev => prev.map(l => l.id === laneId ? { ...l, hitText: 'PERFECT! 🪩' } : l));
+        } else {
+          audio.playBuzz();
+          setCombo(0);
+          setLanes(prev => prev.map(l => l.id === laneId ? { ...l, hitText: 'MISS 💀' } : l));
+        }
+
+        setTimeout(() => {
+          setLanes(prev => prev.map(l => l.id === laneId ? { ...l, hitText: '' } : l));
+        }, 350);
+      };
+
+      // Keyboard support
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (isGameOver) return;
+          if (e.key === 'a' || e.key === 'A') triggerHit(1);
+          if (e.key === 's' || e.key === 'S' || e.key === ' ') triggerHit(2);
+          if (e.key === 'd' || e.key === 'D') triggerHit(3);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [isGameOver, targetLane, combo]);
+
+      return (
+        <div className="w-full max-w-md mx-auto p-4 bg-cyberSurface/90 border border-cyberBorder rounded-2xl flex flex-col items-center">
+          <div className="w-full flex justify-between items-center mb-4 font-mono text-xs sm:text-sm">
+            <div className="text-cyberCyan">SCORE: <span className="font-bold text-base sm:text-lg text-white">{score}</span></div>
+            <div className="text-festiveGold">COMBO: <span className="font-bold text-base sm:text-lg text-neonPink">{combo}x</span></div>
+            <div className="text-rose-400">TIME: <span className="font-bold text-base sm:text-lg text-white">{timeLeft}s</span></div>
+          </div>
+
+          {!isGameOver ? (
+            <div className="w-full space-y-4">
+              <div className="h-28 bg-cyberBlack/70 rounded-xl border border-cyberBorder/50 flex items-center justify-around p-2 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-neonPink/5 via-cyberCyan/5 to-festiveGold/5 animate-pulse" />
+                {[1, 2, 3].map((l) => (
+                  <div 
+                    key={l}
+                    className={`w-20 h-20 rounded-xl flex flex-col items-center justify-center font-bold transition-all duration-150 ${
+                      targetLane === l 
+                        ? 'border-2 border-festiveGold bg-neonPink/30 scale-105 shadow-[0_0_20px_rgba(255,20,147,0.8)]' 
+                        : 'border border-cyberBorder bg-cyberSurface/40 opacity-40'
+                    }`}
+                  >
+                    <span className="text-xl">{l === 1 ? '🥢' : l === 2 ? '🪩' : '🥢'}</span>
+                    <span className="text-[10px] font-mono text-white/80">LANE {l}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tap Controls */}
+              <div className="grid grid-cols-3 gap-2">
+                {lanes.map((lane) => (
+                  <button
+                    key={lane.id}
+                    onClick={() => triggerHit(lane.id)}
+                    className="h-20 bg-gradient-to-b from-cyberBorder to-cyberSurface border border-neonPink/40 rounded-xl active:scale-95 flex flex-col items-center justify-center relative overflow-hidden group hover:border-cyberCyan"
+                  >
+                    <span className="text-[10px] font-mono text-white/60">[{lane.key}]</span>
+                    <span className="text-xs sm:text-sm font-bold text-white tracking-wider">{lane.name}</span>
+                    {lane.hitText && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-cyberBlack/90 text-[11px] font-bold text-festiveGold animate-bounce">
+                        {lane.hitText}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-center font-mono text-white/50">
+                Hit highlighted lane in sync with the beat. Keys A / S / D supported!
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-6 space-y-4 w-full">
+              <div className="text-4xl animate-bounce">🏆</div>
+              <h3 className="text-xl font-bold text-cyberCyan">GARBAVERSE TRIALS CLEARED!</h3>
+              <p className="text-sm text-gray-300 font-mono">
+                FINAL SCORE: <span className="text-festiveGold font-bold">{score} PTS</span>
+              </p>
+              <p className="text-xs text-white/70 italic px-4">
+                "Your motor coordination exceeds the minimum threshold required to not send Ved to the emergency ward."
+              </p>
+              <button
+                onClick={() => onComplete(score)}
+                className="w-full py-3 bg-gradient-to-r from-neonPink to-electricViolet text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all text-sm uppercase tracking-wider"
+              >
+                COLLECT RECRUITMENT XP & ADVANCE →
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function App() {
+      // Game Stages:
+      // 0: Age Gate
+      // 1: Recruitment Portal
+      // 2: Boss Questions
+      // 3: Preference Scanner
+      // 4: Chaos Simulator
+      // 5: Garbaverse Rhythm Arcade
+      // 6: Final Boss Approach
+      // 7: Result Dossier & Story Card Share
+      const [stage, setStage] = useState(0);
+
+      const [xp, setXp] = useState(100);
+      const [currentQIndex, setCurrentQIndex] = useState(0);
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [activeFeedback, setActiveFeedback] = useState(null);
+      const [clashCount, setClashCount] = useState(0);
+      const [personalityBadge, setPersonalityBadge] = useState("SAREE SUPREMACY ALLY");
+      const [finalChoice, setFinalChoice] = useState(null);
+
+      // Contact Form
+      const [applicantName, setApplicantName] = useState("");
+      const [instagramHandle, setInstagramHandle] = useState("");
+      const [consentGiven, setConsentGiven] = useState(false);
+      const [copiedToast, setCopiedToast] = useState(false);
+
+      // One-Click Download Feature
+      const downloadProjectFile = () => {
+        const htmlContent = document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'find-my-ved-dandiya-trials.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      const handleSelectOption = (questionList, option) => {
+        if (selectedOption) return;
+        setSelectedOption(option);
+        setActiveFeedback(option.feedback);
+
+        if (option.isCorrect) {
+          audio.playBlip(680);
+          setXp(x => x + questionList[currentQIndex].xp);
+          if (window.confetti) {
+            window.confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 } });
+          }
+        } else {
+          audio.playBuzz();
+          setXp(x => x + 30); // Participation pity XP
+        }
+      };
+
+      const handleNextQuestion = (questionList, nextStage) => {
+        setSelectedOption(null);
+        setActiveFeedback(null);
+        if (currentQIndex < questionList.length - 1) {
+          setCurrentQIndex(i => i + 1);
+        } else {
+          setCurrentQIndex(0);
+          setStage(nextStage);
+        }
+      };
+
+      if (stage === 0) {
+        return (
+          <main className="min-h-screen flex items-center justify-center p-4 bg-cyberBlack relative overflow-hidden" aria-label="Age Verification Screen">
+            <div className="absolute inset-0 scanline opacity-40" />
+            <div className="max-w-md w-full cyber-card p-6 md:p-8 rounded-3xl border border-electricViolet/40 shadow-2xl relative z-10 text-center space-y-6 animate-slideDown">
+              <div className="w-16 h-16 mx-auto bg-neonPink/20 border border-neonPink rounded-2xl flex items-center justify-center text-3xl animate-bounce">
+                🪩
+              </div>
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-cyberCyan px-2.5 py-1 bg-cyberBorder/60 rounded">
+                  SECURITY PROTOCOL // NAVRATRI 2026
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-black mt-3 text-white tracking-tight">
+                  BEFORE WE COMMENCE...
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-300 mt-2 font-mono leading-relaxed">
+                  "FIND MY VED" is a voluntary invitation to a real-world social Garba evening. You must be 18 or older to apply for a dandiya date with this sleep-deprived engineering student.
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={() => {
+                    audio.init();
+                    audio.playBlip(520);
+                    setStage(1);
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-neonPink via-purple-600 to-cyberCyan font-bold text-white rounded-xl shadow-[0_0_20px_rgba(255,20,147,0.5)] hover:brightness-110 active:scale-95 transition-all text-xs sm:text-sm tracking-wider"
+                >
+                  I'M 18+ — DEPLOY THE SIMULATION 🔥
+                </button>
+                <button
+                  onClick={() => {
+                    alert("Simulation aborted. Go get some rest or study for your exams, king/queen 🫡");
+                  }}
+                  className="w-full py-3 bg-cyberSurface border border-cyberBorder text-gray-400 font-mono text-xs rounded-xl hover:text-white transition-all"
+                >
+                  NOT YET — EXIT SIMULATION 🏃💨
+                </button>
+              </div>
+
+              <div className="pt-2 flex justify-center">
+                <button
+                  onClick={downloadProjectFile}
+                  className="text-[10px] text-cyberCyan hover:underline font-mono flex items-center gap-1 opacity-70 hover:opacity-100"
+                >
+                  ⬇️ Download Standalone App HTML
+                </button>
+              </div>
+            </div>
+          </main>
+        );
+      }
+
+      if (stage === 1) {
+        return (
+          <main className="min-h-screen flex flex-col items-center justify-between p-4 md:p-6 bg-cyberBlack relative overflow-hidden" aria-label="Find My Ved Recruitment Portal">
+            <div className="absolute inset-0 scanline opacity-30 pointer-events-none" />
+
+            <header className="w-full max-w-xl flex justify-between items-center py-2.5 px-4 cyber-card rounded-2xl border-cyberBorder/60 z-10">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-matrixGreen animate-ping" />
+                <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-cyberCyan">STATUS: SEEKING PARTNER</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono text-festiveGold font-bold">XP: {xp}</span>
+                <button
+                  onClick={downloadProjectFile}
+                  title="Download HTML File"
+                  className="px-2 py-1 text-[10px] font-mono bg-cyberBorder text-cyberCyan rounded hover:bg-cyberCyan hover:text-black transition-colors"
+                >
+                  SAVE HTML 💾
+                </button>
+              </div>
+            </header>
+
+            <section className="w-full max-w-lg my-auto flex flex-col items-center text-center z-10 space-y-4 py-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-neonPink/10 border border-neonPink/40 rounded-full text-neonPink text-xs font-mono">
+                <span>📍 RECRUITMENT LIVE</span>
+                <span>•</span>
+                <span>OCTOBER 2026</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white font-festive">
+                FIND MY VED 🪩
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-300 font-mono max-w-md">
+                "Dandiya partner ki vacancy hai. HR department mentally unstable hai."
+              </p>
+
+              <div className="w-full">
+                <DandiyaArcadeCanvas onClash={() => setClashCount(c => c + 1)} />
+              </div>
+
+              <div className="text-xs font-mono text-cyberCyan">
+                {clashCount > 0 ? `💥 Dandiya Strikes: ${clashCount} (Rhythm synced)` : 'Tap screen to test stick responsiveness'}
+              </div>
+
+              <button
+                onClick={() => {
+                  audio.playBlip(700);
+                  setStage(2);
+                }}
+                className="w-full max-w-sm py-4 bg-gradient-to-r from-neonPink to-electricViolet text-white font-bold rounded-2xl shadow-[0_0_25px_rgba(255,20,147,0.6)] hover:brightness-110 active:scale-95 transition-all text-xs sm:text-sm tracking-wider flex items-center justify-center gap-2"
+              >
+                <span>BEGIN PSYCHOLOGICAL TRIALS</span>
+                <span>→</span>
+              </button>
+            </section>
+
+            <footer className="w-full max-w-md text-center py-2 text-[10px] font-mono text-gray-500 z-10">
+              One boy. Zero rizz guarantees. Multiple questionable recruitment rounds.
+            </footer>
+          </main>
+        );
+      }
+
+      if (stage === 2) {
+        const q = BOSS_QUESTIONS[currentQIndex];
+        return (
+          <main className="min-h-screen flex flex-col items-center justify-between p-4 bg-cyberBlack relative overflow-hidden" aria-label="Round 01: Boss Questions">
+            <div className="w-full max-w-xl flex justify-between items-center py-2 px-4 cyber-card rounded-xl text-xs font-mono">
+              <span className="text-cyberCyan font-bold">ROUND 01: BOSS INTEL</span>
+              <span className="text-neonPink">Q {currentQIndex + 1}/{BOSS_QUESTIONS.length}</span>
+              <span className="text-festiveGold">XP: {xp}</span>
+            </div>
+
+            <div className="w-full max-w-xl my-auto space-y-4 py-4">
+              <div className="cyber-card p-5 rounded-2xl border border-electricViolet/50 relative">
+                <span className="text-[10px] font-mono tracking-widest text-cyberCyan uppercase bg-cyberSurface px-2 py-0.5 rounded border border-cyberBorder">
+                  {q.category}
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-white mt-2 leading-snug">
+                  {q.scenario}
+                </h3>
+              </div>
+
+              <div className="space-y-2.5">
+                {q.options.map((opt) => {
+                  const isSelected = selectedOption === opt;
+                  let btnColor = "bg-cyberSurface/80 border-cyberBorder hover:border-cyberCyan text-gray-200";
+                  if (selectedOption) {
+                    if (opt.isCorrect) btnColor = "bg-emerald-950/80 border-matrixGreen text-white";
+                    else if (isSelected) btnColor = "bg-rose-950/80 border-rose-500 text-white";
+                    else btnColor = "opacity-40 bg-cyberSurface/40 border-transparent text-gray-400";
+                  }
+
+                  return (
+                    <button
+                      key={opt.label}
+                      disabled={!!selectedOption}
+                      onClick={() => handleSelectOption(BOSS_QUESTIONS, opt)}
+                      className={`w-full p-3.5 sm:p-4 rounded-xl border text-left font-sans text-xs sm:text-sm transition-all flex items-start gap-3 cyber-btn ${btnColor}`}
+                    >
+                      <span className="font-mono font-bold text-xs px-2 py-1 bg-cyberBlack/80 rounded border border-white/10 shrink-0 text-cyberCyan">
+                        {opt.label}
+                      </span>
+                      <span className="flex-1 font-medium">{opt.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeFeedback && (
+                <div className={`p-4 rounded-xl border text-xs font-mono space-y-2 animate-slideDown ${
+                  selectedOption?.isCorrect 
+                    ? "bg-emerald-950/90 border-matrixGreen text-emerald-200" 
+                    : "bg-rose-950/90 border-rose-500 text-rose-200"
+                }`}>
+                  <div className="font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    {selectedOption?.isCorrect ? "✅ AURA DETECTED:" : "❌ AUDACITY RECORDED:"}
+                  </div>
+                  <p className="leading-relaxed">{activeFeedback}</p>
+                  <button
+                    onClick={() => handleNextQuestion(BOSS_QUESTIONS, 3)}
+                    className="w-full mt-2 py-2.5 bg-white text-cyberBlack font-bold rounded-lg uppercase tracking-wider hover:bg-cyberCyan transition-colors"
+                  >
+                    CONTINUE INVESTIGATION →
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full max-w-xl text-center text-[10px] font-mono text-gray-500 py-1">
+              PRO TIP: If the option sounds like a corporate pre-marital survey, it is 100% incorrect.
+            </div>
+          </main>
+        );
+      }
+
+      if (stage === 3) {
+        const q = PREFERENCE_QUESTIONS[currentQIndex];
+        return (
+          <main className="min-h-screen flex flex-col items-center justify-between p-4 bg-cyberBlack relative overflow-hidden" aria-label="Round 02: Preference Scanner">
+            <div className="w-full max-w-xl flex justify-between items-center py-2 px-4 cyber-card rounded-xl text-xs font-mono">
+              <span className="text-neonPink font-bold">ROUND 02: PREFERENCE SCAN</span>
+              <span className="text-cyberCyan">Q {currentQIndex + 1}/{PREFERENCE_QUESTIONS.length}</span>
+              <span className="text-festiveGold">XP: {xp}</span>
+            </div>
+
+            <div className="w-full max-w-xl my-auto space-y-4 py-4">
+              <div className="cyber-card p-5 rounded-2xl border border-neonPink/50 relative">
+                <span className="text-[10px] font-mono tracking-widest text-festiveGold uppercase bg-cyberSurface px-2 py-0.5 rounded border border-cyberBorder">
+                  {q.category}
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-white mt-2 leading-snug">
+                  {q.scenario}
+                </h3>
+              </div>
+
+              <div className="space-y-2.5">
+                {q.options.map((opt) => {
+                  const isSelected = selectedOption === opt;
+                  let btnColor = "bg-cyberSurface/80 border-cyberBorder hover:border-neonPink text-gray-200";
+                  if (selectedOption) {
+                    if (opt.isCorrect) btnColor = "bg-emerald-950/80 border-matrixGreen text-white";
+                    else if (isSelected) btnColor = "bg-rose-950/80 border-rose-500 text-white";
+                    else btnColor = "opacity-40 bg-cyberSurface/40 border-transparent text-gray-400";
+                  }
+
+                  return (
+                    <button
+                      key={opt.label}
+                      disabled={!!selectedOption}
+                      onClick={() => handleSelectOption(PREFERENCE_QUESTIONS, opt)}
+                      className={`w-full p-3.5 sm:p-4 rounded-xl border text-left font-sans text-xs sm:text-sm transition-all flex items-start gap-3 cyber-btn ${btnColor}`}
+                    >
+                      <span className="font-mono font-bold text-xs px-2 py-1 bg-cyberBlack/80 rounded border border-white/10 shrink-0 text-neonPink">
+                        {opt.label}
+                      </span>
+                      <span className="flex-1 font-medium">{opt.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeFeedback && (
+                <div className={`p-4 rounded-xl border text-xs font-mono space-y-2 animate-slideDown ${
+                  selectedOption?.isCorrect 
+                    ? "bg-emerald-950/90 border-matrixGreen text-emerald-200" 
+                    : "bg-rose-950/90 border-rose-500 text-rose-200"
+                }`}>
+                  <div className="font-bold uppercase tracking-wider">
+                    {selectedOption?.isCorrect ? "✨ ROMANTIC ALIGNMENT ACCELERATED:" : "📡 RADAR GLITCH:"}
+                  </div>
+                  <p className="leading-relaxed">{activeFeedback}</p>
+                  <button
+                    onClick={() => handleNextQuestion(PREFERENCE_QUESTIONS, 4)}
+                    className="w-full mt-2 py-2.5 bg-gradient-to-r from-neonPink to-cyberCyan text-cyberBlack font-bold rounded-lg uppercase tracking-wider hover:brightness-110"
+                  >
+                    LOCK IN INTEL →
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full max-w-xl text-center text-[10px] font-mono text-gray-500 py-1">
+              Evaluating candidate endurance for midnight cutting chai and unexplainable life choices.
+            </div>
+          </main>
+        );
+      }
+
+      if (stage === 4) {
+        const sim = CHAOS_SCENARIOS[currentQIndex];
+        return (
+          <main className="min-h-screen flex flex-col items-center justify-between p-4 bg-cyberBlack relative overflow-hidden" aria-label="Round 03: The Chaos Simulator">
+            <div className="w-full max-w-xl flex justify-between items-center py-2 px-4 cyber-card rounded-xl text-xs font-mono">
+              <span className="text-festiveGold font-bold">ROUND 03: CHAOS SIMULATOR</span>
+              <span className="text-cyberCyan">SCENARIO {currentQIndex + 1}/{CHAOS_SCENARIOS.length}</span>
+              <span className="text-neonPink">XP: {xp}</span>
+            </div>
+
+            <div className="w-full max-w-xl my-auto space-y-4 py-4">
+              <div className="cyber-card p-5 sm:p-6 rounded-2xl border border-electricViolet relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-20 text-4xl">⚡</div>
+                <span className="text-xs font-mono text-neonPink uppercase font-bold tracking-wider">
+                  {sim.title}
+                </span>
+                <p className="text-sm sm:text-base text-gray-100 font-sans mt-3 leading-relaxed">
+                  {sim.text}
+                </p>
+              </div>
+
+              {!selectedOption ? (
+                <div className="space-y-3">
+                  {sim.choices.map((choice, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        audio.playBlip(750);
+                        setSelectedOption(choice);
+                        setXp(x => x + choice.scoreBonus);
+                        setPersonalityBadge(choice.trait);
+                      }}
+                      className="w-full p-4 bg-cyberSurface/80 border border-cyberBorder rounded-xl text-left hover:border-cyberCyan font-sans text-xs sm:text-sm text-gray-200 cyber-btn transition-all flex items-center justify-between"
+                    >
+                      <span className="pr-2">{choice.text}</span>
+                      <span className="text-xs font-mono text-festiveGold shrink-0">+{choice.scoreBonus} XP</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="cyber-card p-5 rounded-2xl border border-cyberCyan text-left space-y-3 font-mono text-xs animate-slideDown">
+                  <div className="text-festiveGold font-bold uppercase tracking-wider">
+                    SIMULATION RESOLUTION // {selectedOption.trait}
+                  </div>
+                  <p className="text-gray-200 text-xs sm:text-sm font-sans leading-relaxed">{selectedOption.outcome}</p>
+                  <button
+                    onClick={() => {
+                      setSelectedOption(null);
+                      if (currentQIndex < CHAOS_SCENARIOS.length - 1) {
+                        setCurrentQIndex(i => i + 1);
+                      } else {
+                        setCurrentQIndex(0);
+                        setStage(5);
+                      }
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-cyberCyan to-electricViolet text-white font-bold rounded-xl uppercase tracking-wider"
+                  >
+                    ENTER DANDIYA COMBAT ARENA 🪩→
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full max-w-xl text-center text-[10px] font-mono text-gray-500 py-1">
+              Every decision permanently modifies Ved's emotional architecture.
+            </div>
+          </main>
+        );
+      }
+
+      if (stage === 5) {
+        return (
+          <main className="min-h-screen flex flex-col items-center justify-between p-4 bg-cyberBlack relative overflow-hidden" aria-label="Round 04: The Garbaverse Arcade">
+            <div className="w-full max-w-xl flex justify-between items-center py-2 px-4 cyber-card rounded-xl text-xs font-mono">
+              <span className="text-matrixGreen font-bold">ROUND 04: GARBA CLASH TEST</span>
+              <span className="text-festiveGold">XP: {xp}</span>
+            </div>
+
+            <div className="w-full max-w-xl my-auto py-2">
+              <GarbaverseRhythmArcade
+                onComplete={(arcadeScore) => {
+                  setXp(x => x + arcadeScore);
+                  setStage(6);
+                }}
+              />
+            </div>
+
+            <div className="w-full max-w-xl text-center text-[10px] font-mono text-gray-500 py-1">
+              Real-time synchronization testing. No external models or bloated packages loaded.
+            </div>
+          </main>
+        );
+      }
+
+      if (stage === 6) {
+        return (
+          <main className="min-h-screen flex flex-col items-center justify-between p-4 bg-cyberBlack relative overflow-hidden" aria-label="Final Boss Approach Screen">
+            <div className="absolute inset-0 scanline opacity-40" />
+
+            <div className="w-full max-w-md my-auto cyber-card p-6 md:p-8 rounded-3xl border border-neonPink/60 shadow-2xl relative z-10 text-center space-y-6 animate-slideDown">
+              <div className="w-16 h-16 mx-auto bg-festiveGold/20 border border-festiveGold rounded-full flex items-center justify-center text-3xl animate-bounce">
+                🪩
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono text-cyberCyan tracking-widest uppercase">
+                  FINAL BOSS STAGE // ALL TRIALS CLEARED
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black text-white font-festive">
+                  YOU HAVE SURVIVED THE LORE.
+                </h2>
+                <p className="text-xs text-gray-300 font-mono leading-relaxed">
+                  You decoded this man's entire personality operating system. You witnessed the ridiculous amount of frontend engineering poured into a Navratri invite.
+                </p>
+              </div>
+
+              <div className="p-4 bg-cyberBlack/80 border border-cyberBorder rounded-2xl text-left">
+                <div className="text-[10px] font-mono text-neonPink uppercase font-bold mb-1">
+                  ONE FINAL INQUIRY REMAINS:
+                </div>
+                <div className="text-sm sm:text-base font-bold text-white">
+                  "Would you like to be Ved's voluntary dandiya partner?"
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={() => {
+                    audio.playFanfare();
+                    setFinalChoice("YES");
+                    setStage(7);
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-neonPink via-purple-600 to-festiveGold font-bold text-white rounded-xl shadow-[0_0_20px_rgba(255,20,147,0.6)] hover:brightness-110 active:scale-95 transition-all text-xs sm:text-sm tracking-wider flex items-center justify-center gap-2"
+                >
+                  <span>YES, LET'S MAKE SOME LORE 🪩</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    audio.playBlip(600);
+                    setFinalChoice("INTERESTED");
+                    setStage(7);
+                  }}
+                  className="w-full py-3.5 bg-cyberSurface border border-cyberCyan text-cyberCyan font-bold rounded-xl hover:bg-cyberCyan/10 active:scale-95 transition-all text-xs tracking-wider"
+                >
+                  I'M INTERESTED — LET'S TALK FIRST 👀
+                </button>
+
+                <button
+                  onClick={() => {
+                    audio.playBlip(440);
+                    setFinalChoice("JUST_GAMES");
+                    setStage(7);
+                  }}
+                  className="w-full py-3 bg-cyberBlack border border-cyberBorder text-gray-400 font-mono text-xs rounded-xl hover:text-white transition-all"
+                >
+                  I'M JUST HERE FOR THE XP & MEMES 💀
+                </button>
+              </div>
+
+              <p className="text-[10px] text-gray-500 font-mono">
+                No obligations. No pressure. Zero emotional manipulation protocols deployed.
+              </p>
+            </div>
+          </main>
+        );
+      }
+
+      if (stage === 7) {
+        const getVerdictCopy = () => {
+          if (finalChoice === "YES") {
+            return {
+              badge: "OFFICIALLY CANDIDATE #001",
+              title: "APPLICATION APPROVED 🪩",
+              desc: "Ved's romantic subsystem is buffering aggressively. No guarantees about dance synchronisation, but unlimited potential for laughing at mutual awkwardness."
+            };
+          } else if (finalChoice === "INTERESTED") {
+            return {
+              badge: "SLOW-BURN ARC INITIATED",
+              title: "DIPLOMATIC TALKS OPEN 👀",
+              desc: "Zero deadlines. Zero expectations. Start with a normal conversation, inspect the vibe, and see if Garba makes sense."
+            };
+          } else {
+            return {
+              badge: "XP FARMER EXTRAORDINAIRE",
+              title: "LEGACY SECURED 💀",
+              desc: "You came. You played. You acquired a concerning amount of intel on Ved. You owe nobody a date. Stay legendary."
+            };
+          }
+        };
+
+        const verdict = getVerdictCopy();
+        const shareSummaryText = `🪩 FIND MY VED: THE DANDIYA RECRUITMENT TRIALS\nScore: ${xp} XP\nBadge: ${personalityBadge}\nVerdict: ${verdict.title}\n"Dandiya partner ki vacancy hai. HR department mentally unstable hai."`;
+
+        const handleCopyShare = () => {
+          navigator.clipboard.writeText(shareSummaryText);
+          setCopiedToast(true);
+          setTimeout(() => setCopiedToast(false), 2500);
+        };
+
+        return (
+          <main className="min-h-screen flex flex-col items-center justify-start p-4 md:p-6 bg-cyberBlack relative overflow-y-auto" aria-label="Final Dossier and Share Screen">
+            <div className="w-full max-w-lg space-y-6 my-4">
+              
+              {/* Instagram Story 9:16 Style Visual Card */}
+              <div id="story-card" className="w-full bg-gradient-to-b from-cyberSurface via-cyberBlack to-cyberSurface border-2 border-neonPink rounded-3xl p-6 shadow-[0_0_40px_rgba(255,20,147,0.35)] relative overflow-hidden text-center space-y-4">
+                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-neonPink via-cyberCyan to-festiveGold" />
+                
+                <div className="flex justify-between items-center text-[10px] font-mono text-gray-400">
+                  <span>FIND MY VED // 2026</span>
+                  <span className="text-festiveGold font-bold">TOTAL XP: {xp}</span>
+                </div>
+
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-neonPink/20 border border-neonPink flex items-center justify-center text-3xl">
+                  {finalChoice === "YES" ? "🪩" : finalChoice === "INTERESTED" ? "✨" : "👾"}
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-cyberCyan px-2.5 py-1 bg-cyberBorder/60 rounded-full">
+                    {verdict.badge}
+                  </span>
+                  <h3 className="text-2xl font-black text-white font-festive mt-2">
+                    {verdict.title}
+                  </h3>
+                  <p className="text-xs text-gray-300 font-mono mt-2 leading-relaxed px-2">
+                    {verdict.desc}
+                  </p>
+                </div>
+
+                <div className="p-3 bg-cyberBlack/80 border border-cyberBorder rounded-xl inline-block">
+                  <div className="text-[9px] font-mono text-gray-400 uppercase">UNLOCKED ARCHETYPE</div>
+                  <div className="text-sm font-bold text-festiveGold">{personalityBadge}</div>
+                </div>
+
+                <div className="pt-2 text-[10px] font-mono text-cyberCyan/70">
+                  find-my-ved.vercel.app • share on story
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleCopyShare}
+                  className="py-3 px-3 bg-cyberSurface border border-cyberCyan text-cyberCyan font-mono text-xs font-bold rounded-xl hover:bg-cyberCyan/10 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>{copiedToast ? "COPIED TO CLIPBOARD! 🚀" : "COPY STORY RESULT 📋"}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setStage(1);
+                    setCurrentQIndex(0);
+                    setSelectedOption(null);
+                  }}
+                  className="py-3 px-3 bg-cyberSurface border border-cyberBorder text-gray-300 font-mono text-xs font-bold rounded-xl hover:text-white active:scale-95 transition-all"
+                >
+                  REPLAY SIMULATION ↺
+                </button>
+              </div>
+
+              {/* Direct Standalone HTML Export */}
+              <div className="w-full text-center">
+                <button
+                  onClick={downloadProjectFile}
+                  className="w-full py-3 bg-cyberBorder/80 hover:bg-cyberCyan hover:text-black text-cyberCyan font-mono text-xs font-bold rounded-xl border border-cyberCyan/40 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>💾 DOWNLOAD COMPLETE OFFLINE HTML FILE</span>
+                </button>
+              </div>
+
+              {/* Voluntary Connection Form (Only if interested) */}
+              {(finalChoice === "YES" || finalChoice === "INTERESTED") && (
+                <div className="cyber-card p-6 rounded-3xl border border-electricViolet/50 space-y-4">
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono text-neonPink uppercase font-bold">
+                      OPTIONAL TRANSMISSION LINK
+                    </span>
+                    <h4 className="text-base sm:text-lg font-bold text-white">
+                      Drop an Instagram handle or Alias
+                    </h4>
+                    <p className="text-xs text-gray-400 font-mono">
+                      Completely voluntary. If you prefer, just DM him directly with a screenshot of this card!
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 font-mono text-xs">
+                    <div>
+                      <label className="block text-gray-300 mb-1">YOUR NICKNAME / CODENAME</label>
+                      <input
+                        type="text"
+                        value={applicantName}
+                        onChange={(e) => setApplicantName(e.target.value)}
+                        placeholder="e.g. Saree Connoisseur"
+                        className="w-full p-3 bg-cyberBlack border border-cyberBorder rounded-xl text-white focus:border-neonPink outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-300 mb-1">INSTAGRAM @HANDLE OR CONTACT</label>
+                      <input
+                        type="text"
+                        value={instagramHandle}
+                        onChange={(e) => setInstagramHandle(e.target.value)}
+                        placeholder="@username"
+                        className="w-full p-3 bg-cyberBlack border border-cyberBorder rounded-xl text-white focus:border-cyberCyan outline-none"
+                      />
+                    </div>
+
+                    <label className="flex items-start gap-2 pt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={consentGiven}
+                        onChange={(e) => setConsentGiven(e.target.checked)}
+                        className="mt-1 accent-neonPink rounded"
+                      />
+                      <span className="text-[11px] text-gray-300 leading-tight">
+                        I am happy for Ved to reach out about Navratri dandiya plans. Zero spam guaranteed.
+                      </span>
+                    </label>
+
+                    <button
+                      disabled={!consentGiven || (!applicantName && !instagramHandle)}
+                      onClick={() => {
+                        audio.playFanfare();
+                        alert(`Dossier logged locally for ${applicantName || 'Applicant'} (${instagramHandle})! Take a screenshot and send it to Ved to seal the deal 🪩`);
+                      }}
+                      className="w-full py-3 bg-gradient-to-r from-neonPink to-electricViolet text-white font-bold rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition-all uppercase tracking-wider"
+                    >
+                      TRANSMIT DOSSIER TO VED 💌
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Official Job Posting Parody Card */}
+              <div className="p-5 bg-cyberSurface/60 border border-cyberBorder rounded-2xl font-mono text-[11px] text-gray-400 space-y-2">
+                <div className="text-festiveGold font-bold text-xs uppercase">
+                  🚨 OFFICIAL VACANCY ADVERTISEMENT
+                </div>
+                <p><strong>Organization:</strong> Ved Enterprises (Emotionally Unstable Division)</p>
+                <p><strong>Role:</strong> Voluntary Navratri Dandiya Partner</p>
+                <p><strong>Perks:</strong> High-tier street snacks, 0 pressure, unlimited terrible tech jokes.</p>
+                <p><strong>Founder Disclaimer:</strong> The founder is not legally liable for awkward pauses or sudden 2 AM philosophical discussions about chai.</p>
+              </div>
+
+            </div>
+          </main>
+        );
+      }
+
+      return null;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
